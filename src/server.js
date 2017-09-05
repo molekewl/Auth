@@ -2,6 +2,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const cors = require('cors');
 
 const STATUS_USER_ERROR = 422;
 const BCRYPT_COST = 11;
@@ -9,8 +10,10 @@ const BCRYPT_COST = 11;
 const User = require('./user');
 
 const server = express();
+
 // to enable parsing of json bodies for post requests
 server.use(bodyParser.json());
+server.use(cors());
 server.use(session({
   secret: 'e5SPiqsEtjexkTj3Xqovsjzq8ovjfgVDFMfUzSmJO21dtXs4re',
   resave: true,
@@ -43,7 +46,7 @@ server.post('/users', (req, res) => {
       sendUserError('couldn\'t hash password', res);
       return;
     }
-    
+
     // this will generate a user record with a hash password on it
     const user = new User({ username, password: hash });
 
@@ -96,7 +99,7 @@ server.post('/login', (req, res) => {
   });
 });
 
-server.post('/log-out', (req, res) => {
+server.post('/logout', (req, res) => {
   if (!req.session.username) {
     sendUserError('Must be logged in', res);
     return;
@@ -122,8 +125,8 @@ const ensureLoggedIn = (req, res, next) => {
       req.user = user;
       next();
     }
-  })
-}
+  });
+};
 
 // this is the routes we want to protect
 // TODO: add local middleware to this route to ensure the user is logged in
@@ -151,7 +154,7 @@ const checkRestricted = (req, res, next) => {
     }
   }
   next();
-}
+};
 // used as a middleware to check restricted paths
 server.use(checkRestricted);
 
